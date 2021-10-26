@@ -3,12 +3,15 @@ import { useHistory } from "react-router";
 import { Link } from "react-router-dom";
 import FirebaseContext from "../context/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
 import * as ROUTES from "../constants/routes";
 
 const SignUp = () => {
   const history = useHistory();
-  const { fireAuth, firebase, fireDB } = useContext(FirebaseContext);
+  const { fireAuth, fireDB } = useContext(FirebaseContext);
 
+  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,22 +21,24 @@ const SignUp = () => {
   const handleSignup = async (event) => {
     event.preventDefault();
     try {
-      const user = await createUserWithEmailAndPassword(
+      const userRef = await createUserWithEmailAndPassword(
         fireAuth,
         emailAddress,
         password
       );
-      console.log(user);
-      console.log(firebase);
-      console.log(fireDB);
-      console.log(fireAuth.currentUser);
+
+      setDoc(doc(fireDB, `users/${userRef.user.uid}`), {
+        username,
+        fullName,
+        emailAddress,
+      });
+
       history.push(ROUTES.DASHBOARD);
     } catch (error) {
       setEmailAddress("");
       setPassword("");
       setError(`Email Already in Use`);
       console.log(error);
-      console.log(fireAuth.currentUser);
     }
   };
 
@@ -56,6 +61,22 @@ const SignUp = () => {
             {error && <p className="text-xs text-red-primary mb-4">{error}</p>}
           </h1>
           <form onSubmit={handleSignup} action="POST">
+            <input
+              type="text"
+              className="w-full mr-3 mb-2 py-5 px-3 h-2 border rounded border-gray-primary"
+              aria-label="enter your username"
+              placeholder="Username"
+              onChange={({ target }) => setUsername(target.value)}
+              value={username}
+            />
+            <input
+              type="text"
+              className="w-full mr-3 mb-2 py-5 px-3 h-2 border rounded border-gray-primary"
+              aria-label="enter your full name"
+              placeholder="Full Name"
+              onChange={({ target }) => setFullName(target.value)}
+              value={fullName}
+            />
             <input
               type="text"
               className="w-full mr-3 mb-2 py-5 px-3 h-2 border rounded border-gray-primary"
